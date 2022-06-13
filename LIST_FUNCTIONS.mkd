@@ -1,0 +1,120 @@
+Here are some more useful List functions. You won't need this until
+exercise 5.
+
+### List.mem
+
+[List.mem] has the following signature:
+```
+    mem : 'a list -> 'a -> equal:('a -> 'a -> bool) -> bool
+```
+
+[List.mem] takes a list, a value, and an equality function and returns true if the
+value passed in is an element of that list (according to the provided equality function).
+
+For example:
+```
+    List.mem [ 1; 2; 3 ] 1 ~equal:Int.equal
+```
+
+would return true.
+
+### List.map
+
+[List.map] has the following signature:
+```
+    map : 'a list -> f:('a -> 'b) -> 'b list
+```
+
+[List.map] takes a list and a function that transforms elements of that list and
+returns a list with the transformation applied to every element of the input list.
+
+For example:
+
+```
+    List.map [ 1; 2; 3 ] ~f:(fun x -> x * 2)
+```
+
+would return
+```
+   [2; 4; 6 ]
+```
+
+A brief aside: "fun" is a keyword that allows you do declare functions "inline". A
+more verbose way of writing the above function call looks like this:
+
+```
+   let f x = x * 2 in
+   List.map [ 1; 2; 3] ~f
+```
+
+### List.fold
+
+[List.fold] has the following signature:
+```
+    fold : 'a list -> init:'b -> f:('b -> 'a -> 'b) -> 'b
+```
+
+[List.fold] takes a list, an initial value of some type 'b, and a function that
+aggregates elements of the list with the accumulator value, and reduces the list down
+to one value.
+
+For example, here is a way to define a function that sums up a list of integers using
+[List.fold]:
+
+```
+   List.fold l ~init:0 ~f:(fun sum_so_far x -> sum_so_far + x)
+```
+
+### List.filter
+
+[List.filter] has the following signature:
+```
+     filter: 'a list -> f:('a -> bool) -> 'a list
+```
+
+[List.filter] takes a list and a predicate and returns a list containing all elements
+of the input list for which the predicate returns true.
+
+For example:
+
+```
+    List.fold [ 1; 2; 3; 4 ] ~f:(fun i -> i % 2 = 0)
+```
+
+would return
+
+```
+    [ 2; 4 ]
+ ```
+
+### List.random_element_exn
+
+[List.random_element_exn] has the following signature:
+    ```
+random_element_exn: 'a list -> 'a
+```
+
+[List.random_element_exn] picks an element from the list at random.
+
+### List.is_empty
+
+[List.is_empty] has the following signature:
+    ```
+is_empty : 'a list -> bool
+```
+
+        [List.is_empty] return true if the input list has no elements.
+
+### Matching on lists
+
+You've seen matching before in the context of variants, but you can also match on lists:
+
+```
+    match l with
+    | [] -> ...
+    | hd :: tl -> ...
+```
+
+Here, "[]" represents the empty list. "hd :: tl" captures the first element of the list
+as "hd" and the rest of the elements of the list as "tl". (Note the names "hd" and "tl"
+are not special, and can be replaced with any other variable names.)

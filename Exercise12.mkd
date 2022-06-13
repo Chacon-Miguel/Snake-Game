@@ -1,0 +1,202 @@
+Persistent Leaderboard
+----------------------
+
+This exercise is a big one! You'll learn about lots of new things
+here, and need to write a lot of interesting code.  Don't hesitate at
+all to ask a TA if you are having trouble at any point!
+
+At a high level, we want to store high scores from the game and be
+able to see all of the high scores from previous runs of the game.
+We'll start with a fairly bare-bones implementation, but you're
+welcome to add more bells and whistles as you would like!
+
+Our implementation will store the high-scores to a file. Every time we
+run the game, we'll need to read the high-scores file and re-write it
+if necessary. We'll also need a way to associate a player name with
+each run of the game, which we will do via a command line argument.
+
+We'll implement this leaderboard in four parts:
+1. Implement the leaderboard state type and functionality for updating
+   and persisting the scores file to disk.
+2. Add in a game-over hook to update the scores file when a game ends.
+3. Implement a leaderboard renderer and print the new high scores when
+   a game ends.
+4. Add a command-line argument for supplying the player name.
+
+(Note: If you have implemented multiplayer snake, you'll have to adapt
+some of this exercise to account for the fact that you have two
+different players. Feel free to ask a TA if you have any questions.)
+
+# Part 1
+
+First, let's take a look at leaderboard.mli. This is the interface for
+the module that we will need to implement.
+
+We see two functions exposed:
+- `update` is the function that we'll eventually call to add a new
+  score to our scores file
+- `to_table` is the function that we'll eventually call to render our
+  leaderboard
+
+To be as simple as possible, the way our leaderboard will work is by
+storing all scores to a file, so `update` will need to be called after
+every single game. Then, `to_table` will sort the scores and return
+the specified number of top scores.
+
+Let's go to the implementation file leaderboard.ml. This is almost
+entirely stubbed out. It also has one more function that's not
+exposed, `load`, which we'll implement. `load` is going to be a helper
+function that reads the scores file into our program.
+
+## Step 1
+Let's start by defining the leaderboard type.
+
+This is the type that represents the data we store to a file, so it
+should contain all of the scores of every game that gets played.
+
+We should also store a player name for each game/score. (We'll add
+support for player names in part 4, so for now we can just hard code
+the player name when we go to construct the scores file, but it's good
+to add it to our type now since we know we'll want it.)
+
+Feel free to grab a TA to talk through your thoughts on what this type
+should be.
+
+## Step 2
+With our type defined, we can work on implementing `load` and
+`update`. Take a detour to read Sexp_and_file_io.mkd to learn how we
+can write down data from our OCaml program into a file and to read
+that data back in.
+
+## Step 3
+One interesting thing to note is the parameter `player_name` in
+the `update` function. The question mark at the start of the parameter
+in the function signature indicates that the parameter is an "optional
+parameter". That means that the caller of this function can choose
+whether or not to pass it when calling the function. Both of these
+are valid ways of calling `Leaderboard.update`:
+
+```
+let%bind leaderboard = Leaderboard.update ~player_name:"Alice" ~score:20 () in
+
+let%bind leaderboard = Leaderboard.update ~score:20 () in
+```
+
+Note that when the optional argument is passed, the syntax to do so
+uses the tilde, just like for named arguments.
+
+Optional arguments end up having an optional type in the function
+where they are passed:
+```
+let print_my_favorite_fruit ?fruit () =
+   match fruit with
+   | None -> Core.printf "I don't have a favorite fruit!"
+   | Some fruit -> Core.printf "My favorite fruit is the %s" fruit
+;;
+```
+
+Often times when writing functions with optional arguments, we'll want
+to have a default value if the argument is not passed. To do so, use
+the following syntax:
+```
+let print_my_favorite_fruit ?(fruit = "apple") () =
+   Core.printf "My favorite fruit is the %s" fruit
+;;
+```
+
+When you implement `update`, think about whether or not you want to
+add a default value for the `player_name` argument.
+
+## Step 4
+Now, go ahead and try implementing `load` and `update`! Don't hesitate to
+grab a TA if you have any questions.
+
+# Part 2
+
+Now, let's try to add a hook so that whenever a game ends, we get the
+score and update our scores file. When this part is implemented, you
+should be able to see that your scores file is updated every time you
+play a new game.
+
+(Hint: You will probably need to add some code to run.ml. A useful
+async primitive is `upon`.)
+
+# Part 3
+
+At this point, we have something that keeps our score file updated. It
+would be nice if we saw the leaderboard every time the game ended.
+
+Of course we could add some nice graphical leaderboard, but to get the
+simplest thing working, let's just start by printing the leaderboard
+out to the terminal output every time the game ends.
+
+First, we'll want to implement `to_table` in leaderboard.ml, which
+will need to take our score compilation and render the top n scores
+(in order) to a printable string.
+
+A useful function for this exercise is `sprintf`, which creates
+C-style formatted strings. Here are some examples in utop:
+
+```
+utop # sprintf "This is how you format a %s" "string";;
+- : string = "This is how you format a string"
+utop # sprintf "You can also format an int: %d. You can even pad the int to be a specified number of characters long: %5d." 7 7;;
+- : string = "You can also format an int: 7. You can even pad the int to be a specified number of characters long:     7."
+utop # sprintf "Here is a formatted float: %f. You can specify how many significant digits the float has: %0.2f." 7.7 7.7;;
+- : string = "Here is a formatted float: 7.700000. You can specify how many significant digits the float has: 7.70."
+```
+
+You'll also probably need to use `List.sort` to get the high scores.
+Feel free to ask a TA for help if you run into trouble using this
+function.
+
+Once you've implemented `to_table`, we'll need to call it in when the
+game ends to get a string representation of the high scores. You can
+then use `Core.print_endline` to print the string to the terminal.
+
+This would also be a good opportunity to try writing an expect test to
+show what your formatted string looks like. You can look at some of
+the tests from exercises 1-8 in snake/tests for inspiration, and your
+TA will be more than happy to help you set up a test as well.
+
+At this point, the high scores should work, except that every score is
+attributed to the same, hardcoded player! We'll fix this in part 4.
+
+# Part 4
+
+For the final part of this extension, we're going to add a commandline
+argument to our snake game so that we can supply a player name that
+will be shown in the leaderboard.
+
+We haven't encountered command-line arguments yet, so let's hop over
+to snake/command-demo to look at an example.
+
+Once you're familiar with how the `Command` module works, we'll need
+to make some changes to our setup to actually incorporate it. The
+current way we start up a game is by calling `Run.run` directly.
+Instead, let's expose a `command` from run.ml and only call `run`
+within that command.
+
+When the command is written, we can change snake/bin/snake.ml to run
+that command. Check out snake/command-demo if you need a refresher on
+the syntax.
+
+# And beyond!
+
+You should have a working leaderboard now! Pat yourself on the back -
+this was a big one.
+
+As a review, here are some things we learned about:
+- optional arguments
+- sexp serialization
+- file IO
+- `Command`
+
+These are all things that come up very commonly when writing OCaml
+code, so make sure you understand how these work.
+
+There are also plenty of improvements you could make to the
+leaderboard! Some potential ideas:
+- add a date to each entry for when the score was achieved
+- render the leaderboard in the snake game after it ends
+- show a special message if the latest game achieves a high score

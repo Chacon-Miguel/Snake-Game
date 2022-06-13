@@ -1,0 +1,11 @@
+;; -*- scheme -*-
+
+(executables
+ (names snake)
+ (libraries
+  async
+  core
+  core_unix.command_unix
+  graphics
+  snake_lib))
+

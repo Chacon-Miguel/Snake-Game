@@ -1,0 +1,107 @@
+Snake over RPC
+--------------
+Currently, our snake game runs in a single process; that is, the logic
+for running the game and the logic for rendering the game's graphics
+and handling user input is all bundled up together. It would be nice
+to run the server separately from the client. One practial implication
+of a server-client architecture is that we can have two people playing
+multiplayer snake from different machines.
+
+(Note: You probably should not embark on this exercise until after
+seeing the Introduction to RPCs talk. Please check in with a TA if you
+have any questions.)
+
+To start, take a look at the code in snake/rpc-demo. This directory
+includes two examples of RPC servers:
+
+1. Echo server: this server implements a simple send-message
+   RPC. Clients send a string message to the server, and the server
+   sends that message back to the client (along with some extra
+   pleasantries). This RPC is an example of a simple RPC where a
+   single query begets a single response.
+
+2. Heartbeat server: this server implements a request-heartbeats
+   RPC. Clients can ask for "heartbeats" to be sent by the server at
+   given frequencies. This RPC is an example of a pipe RPC, where the
+   server responds to a client's query with a pipe, over which it will
+   send heartbeats at the frequency requested by the client.
+
+To run these servers, you will need to have two separate terminals
+open, one for running the server, and one for running the client:
+
+(in first terminal)
+cd snake/rpc-demo
+dune exec ./bin/rpc-demo.exe -- echo server -port 1337
+
+(in second terminal)
+cd snake/rpc-demo
+dune exec ./bin/rpc-demo.exe -- echo client send-message -server localhost:1337 -message "hello!"
+
+You can spin up the heartbeat server and client in a similar way.
+
+Note that if you want to be able to run the server and client on
+different boxes, you will need to replace "localhost" with the IP
+address of the box that the server is running on.
+
+With these example RPC servers in hand, let's think about how to
+"serverize" our game of snake. This is a big task, and there's a lot of
+complexity we could introduce! But as a first step, let's aim to turn
+our single-process snake game into a single server and a single
+client.
+
+Concretely, we'll need to:
+- delineate server vs client responsibilities: we probably want the
+  server to handle the logic of running the game and for the client to
+  handle rendering the game onto our screen and taking in keypresses;
+- define a protocol for the client and server to communicate with each
+  other: we'll need a way for the server to tell the client when the
+  state of the board has changed, and a way for the client to tell the
+  server that a user has pressed a key.
+
+Here are some other questions you might want to think about:
+- how will the server know when to start a game?
+- how will the client know that the game is over?
+- what happens if multiple clients connect to the server?
+- what happens when a client disconnects?
+
+When starting a project that involves changing the design and control
+flow of code, it's always good to discuss your ideas with another
+person. Don't hesitate to chat with each other and the TAs to double
+check your plans, and start simple!
+
+Here are some steps to get started:
+1. First, let's try to define a protocol for your server and
+   client. What RPCs need to be implemented? Should the RPC be a
+   simple RPC or a pipe RPC? For each RPC, what should the query type
+   be, and what should the response type be? A good place to define
+   the protocol would be in a new file called protocol.ml, and you'll
+   also need to define the corresponding interface file protocol.mli.
+   You might need to make some types derive "bin_io" in order to
+   define your protocol.
+2. Next, let's implement the client. You'll need to define a command
+   for starting up a client, and add it to the command you implemented
+   in exercise 12. What RPCs will your client need to dispatch, and
+   when? You also will need to use `Command.group` to combine multiple
+   commands into a single command. Try it out, and ask a TA if you
+   have any questions.
+3. Finally, let's implement the server. Again, you'll need to define a
+   command for starting up a server, and add it to the command you
+   implemented in exercise 12. What RPCs will your server need to
+   implement?
+
+Once you have successfully separated your snake game into a server and
+client, go ahead and try to support two-player remote snake!
+
+Some other fun ideas you could try:
+- support connecting "spectator" clients that can watch the game but
+  not participate;
+- add even more players! perhaps new clients can always join the
+  ongoing game as a length-3 snake;
+- support multiple games happening in parallel on the server; the
+  server can pair up connected clients so that as soon as the second
+  client joins, the first and second clients start playing a game, and
+  the third client has to wait for a fourth client to connect, etc.
+- support password-protected games, so that clients can choose what
+  game to join.
+
+As always, feel free to grab a TA if you have any questions!

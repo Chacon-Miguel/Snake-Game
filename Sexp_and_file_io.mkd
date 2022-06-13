@@ -1,0 +1,84 @@
+In this tutorial, we'll learn about the sexp serialization format and
+how we can easily write OCaml values to files and read them back into
+our OCaml programs.
+
+In order to write program data to a file we must "serialize" it,
+meaning we must convert it into a format that is writeable to files
+(or transmitted over the internet, as another example).
+
+It's worth explaining why this is necessary: i.e data in memory may
+contain pointers to stuff but pointers can't just be dereferenced on
+another machine so we need to chase down all the data at the ends of
+those pointers and package it up so that another machine (or even a
+different process on the same one) can access all the data.
+
+Sexp
+----
+"Sexp", or "S-expression', is a format for representing expressions
+that is commonly used in OCaml. You can think of it as a more
+structured string. It's also similar to the JSON format, which is
+commonly used in web development.
+
+Sexp is so commonly used in OCaml that there is tooling for helping us
+generate sexp representations of our types. Let's take a look at how
+we can use this:
+1. Open up a terminal, and launch utop.
+2. Let's define the following type, t:
+```
+type t = { a : int; b : string } [@@deriving sexp];;
+```
+You should see that in addition to defining your type, we also have two functions:
+```
+utop # type t = { a : int; b : string } [@@deriving sexp];;
+type t = { a : int; b : string; }
+val t_of_sexp : Sexp.t -> t = <fun>
+val sexp_of_t : t -> Sexp.t = <fun>
+```
+
+These two functions are automatically generated when we write
+[@@deriving sexp]:
+```
+(** [sexp_of_t] converts a t into a sexp *)
+val sexp_of_t : t -> Sexp.t
+
+(** [t_of_sexp] converts a sexp into a t *)
+val t_of_sexp : Sexp.t -> t
+```
+
+We can try these functions out in utop:
+```
+utop # sexp_of_t { a = 5; b = "hello" };;
+- : Sexp.t = ((a 5) (b hello))
+utop # t_of_sexp (sexp_of_t { a = 5; b = "hello" });;
+- : t = {a = 5; b = "hello"}
+```
+
+(Note that ```t_of_sexp (sexp_of_t t) = t```. Because of this
+equality, we say that "t roundtrips")
+
+So, whenever we want to save an OCaml value to a file, we often want
+to convert it to a sexp and then save the sexp to a file.
+
+File IO
+-------
+Now that we know about sexps, here are a few useful functions for
+writing sexps to files and reading sexps from files:
+```
+utop # Writer.save_sexp "/home/ubuntu/test.sexp" (sexp_of_t { a = 5; b = "hello" });;
+- : unit = ()
+utop # Reader.load_sexp_exn "/home/ubuntu/test.sexp" t_of_sexp;;
+- : t = {a = 5; b = "hello"}
+```
+
+In the invocation of `Writer.save_sexp`, we passed a filename followed
+by a sexp.
+
+in the invocation of `Reader.load_sexp_exn`, we passed a filename
+followed by a function that converts a sexp into a t.
+
+There are lots of different functions available for manipulating
+files. You can look at the documentation for
+[Writer](https://v3.ocaml.org/u/6e22af8f4adf753f1e8e7dc53a0d1444/async_unix/v0.15.0/doc/Async_unix/Writer/index.html)
+and
+[Reader](https://v3.ocaml.org/u/6e22af8f4adf753f1e8e7dc53a0d1444/async_unix/v0.15.0/doc/Async_unix/Reader/index.html)
+to learn more.
