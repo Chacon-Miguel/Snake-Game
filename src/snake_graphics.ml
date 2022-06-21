@@ -62,10 +62,11 @@ let draw_header ~game_state ~scores=
   let header_text = Game_state.to_string game_state in
   Graphics.set_color     Colors.black;
   Graphics.set_text_size 20;
-  Graphics.moveto        0 (play_area_height + 25);
-  Graphics.moveto (play_area_width - 75) (play_area_height + 25);
+  Graphics.moveto        25 (play_area_height + 25);
   Graphics.draw_string (Printf.sprintf "Player 1 Score: %d" scores.(0));
+  Graphics.moveto (play_area_width - 200) (play_area_height + 25);
   Graphics.draw_string (Printf.sprintf "Player 2 Score: %d" scores.(1));
+  Graphics.moveto (play_area_width/2 - 100) (play_area_height + 10);
   Graphics.draw_string   (Printf.sprintf " %s" header_text)
 ;;
 

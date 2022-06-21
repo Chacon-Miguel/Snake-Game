@@ -72,6 +72,7 @@ let restart t =
   t.snakes <- snakes ;
   t.board <- board ;
   t.scores <- scores;
+  t.game_state <- In_progress;
   match apple with 
   | None -> failwith "unable to create initial apple"
   | Some apple -> t.apple <- apple
@@ -205,7 +206,6 @@ let check_for_collisions_between_players t =
   else if List.mem (Snake.all_locations t.snakes.(1) ) (Snake.head t.snakes.(0)) 
     ~equal: (fun pos1 pos2 -> Position.equal pos1 pos2)
   then t.game_state <- Game_state.Game_over "Players Collided!"
-
 ;;
 
 let _check_for_collisions t i =
