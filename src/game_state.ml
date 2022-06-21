@@ -4,6 +4,7 @@ type t =
   | In_progress
   | Game_over of string
   | Win
+  | Paused
 [@@deriving sexp_of, compare]
 
 let to_string t =
@@ -11,4 +12,5 @@ let to_string t =
   | In_progress -> ""
   | Game_over x -> "Game over: " ^ x
   | Win         -> "WIN!"
+  | Paused      -> ""
 ;;

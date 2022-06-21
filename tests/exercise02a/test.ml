@@ -1,4 +1,4 @@
-open! Base
+(* open! Base
 open! Snake_lib
 
 let%expect_test "Exercise 02a" =
@@ -20,4 +20,4 @@ let%expect_test "Exercise 02a" =
   [%expect {| e -> () |}];
   test 'r';
   [%expect {| r -> () |}]
-;;
+;; *)

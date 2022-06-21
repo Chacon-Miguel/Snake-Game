@@ -1,49 +1,80 @@
 open! Core
 
 type t =
-  { mutable snake      : Snake.t
+  { mutable snakes     : Snake.t array
   ; mutable game_state : Game_state.t
   ; mutable apple      : Apple.t
-  ; mutable score      : int
-  ; board              : Board.t
+  ; mutable scores     : int array
+  ; mutable board              : Board.t
   }
 [@@deriving sexp_of]
 
-let to_string { snake; game_state; apple; board; score} =
+let set_snakes t snakes = t.snakes <- snakes
+let set_game_state t game_state = t.game_state <- game_state
+;;
+let set_apple t apple = t.apple <- apple 
+let set_scores t scores = t.scores <- scores 
+let set_board t board = t.board <- board 
+let to_string { snakes; game_state; apple; board; scores} =
   Core.sprintf
     !{|Game state: %{sexp:Game_state.t}
 Apple: %{sexp:Apple.t}
 Board: %{sexp:Board.t}
-Score: %{sexp:int}
-Snake:
-%s |}
+Snake 1 Score: %{sexp:int}
+Snake 2 Score %{sexp: int}
+Snake 1:
+Snake 2:
+%s 
+%s|}
     game_state
     apple
     board
-    score
-    (Snake.to_string ~indent:2 snake)
+    scores.(0)
+    scores.(1)
+    (Snake.to_string ~indent:2 snakes.(0))
+    (Snake.to_string ~indent:2 snakes.(1))     
 ;;
 
 let create ~height ~width ~initial_snake_length =
-  let board = Board.create ~height ~width               in
-  let snake = Snake.create ~length:initial_snake_length in
-  let apple = Apple.create ~board ~snake                in
-  let score = 0 in
+  let board  = Board.create             ~height ~width in
+  let snakes = Snake.create_multiplayer ~length: initial_snake_length ~board in
+  let apple  = Apple.create_multiplayer ~board ~snakes in
+  let scores = [|0; 0|] in
   match apple with
   | None       -> failwith "unable to create initial apple"
   | Some apple ->
-    let t = { snake; apple; game_state = In_progress; board ; score} in
-    if List.exists (Snake.all_locations snake) ~f:(fun pos ->
-      not (Board.in_bounds t.board pos))
+    let t = { snakes; apple; game_state = In_progress; board ; scores} in
+    if (List.exists (Snake.all_locations snakes.(0)) ~f:(fun pos ->
+      not (Board.in_bounds t.board pos))) && 
+      (List.exists (Snake.all_locations snakes.(1)) ~f:(fun pos ->
+        not (Board.in_bounds t.board pos)))
     then failwith "unable to create initial snake"
     else t
 ;;
 
-let snake      t = t.snake
-let apple      t = t.apple
+let snakes t = t.snakes
+let apple  t = t.apple
 let game_state t = t.game_state
+let scores t = t.scores
+;;
 
-let score t = t.score
+let restart t = 
+  (* let height = Board.get_height t.board in
+  let width = Board.get_width t.board in
+  let initial_snake_length = 3 in 
+  create ~height ~width ~initial_snake_length *)
+  let height = Board.get_height t.board in 
+  let width = Board.get_width t.board in 
+  let board  = Board.create             ~height ~width in
+  let snakes = Snake.create_multiplayer ~length: 3 ~board in
+  let apple  = Apple.create_multiplayer ~board ~snakes in
+  let scores = [|0; 0|] in
+  t.snakes <- snakes ;
+  t.board <- board ;
+  t.scores <- scores;
+  match apple with 
+  | None -> failwith "unable to create initial apple"
+  | Some apple -> t.apple <- apple
 ;;
 
 (* Exercise 02b:
@@ -110,27 +141,18 @@ let score t = t.score
 
    Once you're done, go back to README.mkd for the next exercise.
 *)
-let _handle_key t key =
-  (* ignore t;
-  ignore key *)
-  (* let direction_op = 
-  let direction =  *)
+(* let _handle_key t key =
   match Direction.of_key key with
-  | Some Up, _ -> Snake.set_direction t.snake Up
-  | Some Down, _ -> Snake.set_direction t.snake Down
-  | Some Left, _ -> Snake.set_direction t.snake Left
-  | Some Right, _ -> Snake.set_direction t.snake Right
+  | Some Up,    _ -> Snake.set_direction t.snakes.(_) Up
+  | Some Down,  _ -> Snake.set_direction t.snakes.(_) Down
+  | Some Left,  _ -> Snake.set_direction t.snakes.(_) Left
+  | Some Right, _ -> Snake.set_direction t.snakes.(_) Right
   | None, _ -> ()
-;;
+;; *)
 let handle_key t key =
-  (* ignore t;
-  ignore key *)
-  (* let direction_op = 
-  let direction =  *)
   match Direction.of_key key with
-  | None, _ -> ()
-  
-  | Some dir, _ -> Snake.set_direction t.snake dir
+  | None, _        -> ()
+  | Some dir, i -> Snake.set_direction t.snakes.(i) dir
 ;;
 
 
@@ -176,13 +198,25 @@ let handle_key t key =
 
    Return to README.mkd for instructions on exercise 04.
 *)
-let check_for_collisions t =
-  (* Remember to remove `ignore t` when implemented. *)
-  if Board.in_bounds t.board (Snake.head t.snake)
-  then ()
-  else
-    t.game_state <- Game_state.Game_over "Out of bounds!"
+let check_for_collisions_between_players t = 
+  if List.mem (Snake.all_locations t.snakes.(0) ) (Snake.head t.snakes.(1)) 
+    ~equal: (fun pos1 pos2 -> Position.equal pos1 pos2)
+  then t.game_state <- Game_state.Game_over "Players Collided!"
+  else if List.mem (Snake.all_locations t.snakes.(1) ) (Snake.head t.snakes.(0)) 
+    ~equal: (fun pos1 pos2 -> Position.equal pos1 pos2)
+  then t.game_state <- Game_state.Game_over "Players Collided!"
+
 ;;
+
+let _check_for_collisions t i =
+  if not(Board.in_bounds t.board (Snake.head t.snakes.(i)))
+  then t.game_state <- Game_state.Game_over "Player %{i} out of bounds! Player %{i+1} wins!"
+  
+let check_for_collisions t =
+  _check_for_collisions t 0;
+  _check_for_collisions t 1
+;;
+
 
 (* Exercise 06b:
 
@@ -204,17 +238,22 @@ let check_for_collisions t =
    we should update the [game_state] to reflect that.
 
 *)
+
+let _maybe_consume_apple t i = 
+  if Position.equal (Snake.head t.snakes.(i)) (Apple.location t.apple)
+    then 
+      (
+      Snake.grow_over_next_steps t.snakes.(i) (Apple.amount_to_grow t.apple);
+      t.scores.(i) <- t.scores.(i) + 1; (* Consider adding a function for different colors of apples or based on time or both? *)
+      match (Apple.create ~board:t.board ~snake:t.snakes.(i)) with
+      | None -> t.game_state <- Game_state.Win
+      | Some loc -> t.apple <- loc
+      ) 
+;;
+
 let maybe_consume_apple t =
-  (* Remember to remove `ignore t` when implemented. *)
-  if Position.equal (Snake.head t.snake) (Apple.location t.apple)
-  then 
-    (
-    Snake.grow_over_next_steps t.snake (Apple.amount_to_grow t.apple);
-    t.score <- t.score + 1; (* Consider adding a function for different colors of apples or based on time or both? *)
-    match (Apple.create ~board:t.board ~snake:t.snake) with
-    | None -> t.game_state <- Game_state.Win
-    | Some loc -> t.apple <- loc
-    ) 
+  _maybe_consume_apple t 0;
+  _maybe_consume_apple t 1
 ;;
 
 (* Exercise 04b:
@@ -232,15 +271,31 @@ let maybe_consume_apple t =
    "Self collision!".
 
    When all the tests for exercise 04 pass, return to README.mkd for exercise 05. *)
+  
+let _step t i = 
+  if Snake.step t.snakes.(i)
+  then (
+    _check_for_collisions t i;
+    _maybe_consume_apple t i;
+  )
+  else t.game_state <- Game_state.Game_over "Self collision!"
+
 let step t =
-  if Snake.step t.snake
+  (* if Snake.step t.snake
   then (
     check_for_collisions t;
     maybe_consume_apple t)
-  else t.game_state <- Game_state.Game_over "Self collision!"
+  else t.game_state <- Game_state.Game_over "Self collision!" *)
+  check_for_collisions_between_players t;
+  _step t 0;
+  _step t 1
 ;;
 
-module Exercises = struct
+
+
+
+
+(* module Exercises = struct
   let exercise02b = handle_key
 
   let exercise03b t snake =
@@ -258,4 +313,4 @@ module Exercises = struct
   let exercise06b       = maybe_consume_apple
   let set_apple t apple = t.apple <- apple
   let set_snake t snake = t.snake <- snake
-end
+end *)

@@ -1,21 +1,23 @@
 open! Core
 
 module Color = struct
-  type t = Red [@@deriving sexp_of, enumerate, compare]
+  type t = 
+  | Red
+  | Gold
+[@@deriving sexp_of, enumerate, compare]
 end
 
-type t = { location : Position.t } [@@deriving sexp_of]
+type t = { location : Position.t; color: Color.t} [@@deriving sexp_of]
 
 let location t = t.location
 
-let color t =
-  ignore t;
-  Color.Red
+let color t =  t.color
 ;;
 
 let amount_to_grow t =
   match color t with
   | Red -> 2
+  | Gold -> 3
 ;;
 
 (* Exercise 05:
@@ -63,19 +65,32 @@ let amount_to_grow t =
 
    $ dune runtest tests/exercise05 *)
 let possible_apple_locations ~board ~snake =
-  ignore board;
-  ignore snake;
-  [ { Position.row = 1; col = 1 } ]
+  (* ignore board;
+  ignore snake; *)
+  (* [ { Position.row = 1; col = 1 } ] *)
+  List.filter (Board.all_locations board) ~f: (fun x -> 
+    not (List.mem (Snake.all_locations snake) x ~equal: (fun pos1 pos2 -> Position.equal pos1 pos2)))
 ;;
 
 let create ~board ~snake =
   let possible_locations = possible_apple_locations ~board ~snake in
-  match List.random_element possible_locations with
-  | None          -> None
-  | Some location -> Some { location }
+  match (List.random_element possible_locations), List.random_element_exn [1; 2] with
+  | None, _          -> None
+  | Some location, 1 ->  Some { location; color = Red }
+  | Some location, _ -> Some {location; color = Gold}
 ;;
+
+let create_multiplayer ~board ~snakes =
+  let possible_locations = (possible_apple_locations ~board ~snake:snakes.(0))
+  @(possible_apple_locations ~board ~snake:snakes.(1)) in
+  match (List.random_element possible_locations), List.random_element_exn [1; 2] with
+  | None, _          -> None
+  | Some location, 1 ->  Some { location; color = Red }
+  | Some location, _ -> Some {location; color = Gold}
+;;
+
 
 module Exercises = struct
   let exercise05                    = possible_apple_locations
-  let create_with_location location = { location }
+  let create_with_location location = { location; color = Red}
 end

@@ -19,7 +19,7 @@ val to_string : ?indent:int -> t -> string
     The head will be at position (length - 1, 0) and the initial direction
     should be towards the right. *)
 val create               : length:int -> t
-
+val create_multiplayer   : length:int -> board:Board.t -> t array
 (** [grow_over_next_steps t n] tells the snake to grow by [n] in length over
     the next [n] steps. *)
 val grow_over_next_steps : t -> int -> unit

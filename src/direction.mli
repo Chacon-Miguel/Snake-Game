@@ -11,8 +11,8 @@ type t =
     next position after taking one step in the specified direction. *)
 val next_position : t -> Position.t -> Position.t
 
-val of_key : Char.t -> t option
+val of_key : Char.t -> t option * int
 
-module Exercises : sig
+(* module Exercises : sig
   val exercise02a : Char.t -> t option
-end
+end *)

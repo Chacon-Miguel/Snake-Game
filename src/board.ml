@@ -9,6 +9,10 @@ type t =
 let create           ~height ~width = { height; width }
 let create_unlabeled height  width  = { height; width }
 
+let get_height t = t.height
+
+let get_width t = t.width
+
 (* Exercise 03a:
 
    This module is a simple record that represent the parameters of the board. It is a
@@ -37,7 +41,7 @@ let in_bounds t { Position.row; col } =
   ignore t;
   ignore row;
   ignore col;
-  true
+  0 <= row && row < t.height && 0 <= col && col < t.width
 ;;
 
 let all_locations t =

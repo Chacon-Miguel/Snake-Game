@@ -38,6 +38,22 @@ let create ~length =
   }
 ;;
 
+let create_multiplayer ~length ~board = [|
+  {
+      direction = Right
+    ; extensions_remaining = 0
+    ; head = {Position.row = 0; col = length - 1}
+    ; tail = List.init (length - 1) ~f:(fun col -> { Position.row = 0; col })
+  };{
+      direction = Left
+    ; extensions_remaining = 0
+    (* ; head = {Position.row = Board.get_height board -1; col = Board.get_width board - length}
+    ; tail = List.init (length -1) ~f:( fun col -> {Position.row = Board.get_height board; col = Board.get_width board -1- col}) *)
+    ; head = {Position.row = 0; col = Board.get_width board - length}
+    ; tail = List.init (length -1) ~f:( fun col -> {Position.row = 0; col = Board.get_width board -1- col})
+  }  
+|]
+;;
 (* Exercise 06a:
 
    When the snake consumes an apple, we want the snake to grow over the next few time
@@ -51,9 +67,7 @@ let create ~length =
    $ dune runtest ./tests/exercise06a
 *)
 let grow_over_next_steps t by_how_much =
-  ignore t;
-  ignore by_how_much;
-  ()
+  t.extensions_remaining <- t.extensions_remaining + by_how_much
 ;;
 
 let head          t           = t.head
@@ -139,12 +153,16 @@ let set_direction t direction = t.direction <- direction
    Once you have this test passing, go back to the README to move on.
 *)
 
+
 let move_forward head tail direction =
   (* We have `ignore direction` here so that the compiler does not complain that we aren't
      using the [direction] variable passed into this function. When you have finished
      implementing this function, feel free to remove `ignore direction`. *)
-  ignore direction;
-  head, tail
+  (* remove tail *)
+  let new_head = Direction.next_position direction head in
+  let body = List.tl_exn tail @ [head] in
+  new_head, body
+
 ;;
 
 (* Exercise 04a:
@@ -236,8 +254,7 @@ let move_forward head tail direction =
 *)
 
 let collides_with_self t =
-  ignore t;
-  false
+  List.exists ~f:(Position.equal t.head) t.tail
 ;;
 
 (* Exercise 06c:
@@ -269,14 +286,23 @@ let collides_with_self t =
    try it out. Once you're ready, return to README.mkd for exercise extensions.
 *)
 let move_forward_and_grow ({ direction; extensions_remaining; head; tail } as t) =
-  ignore direction;
-  ignore extensions_remaining;
-  ignore t;
-  head, tail
+  if t.extensions_remaining > 0
+  then 
+    (
+      t.extensions_remaining <- t.extensions_remaining - 1;
+      let new_head = Direction.next_position t.direction t.head in
+      let body = t.tail @ [head] in
+      new_head, body;
+      )
+  else
+    let new_head = Direction.next_position direction head in
+    let body = List.tl_exn tail @ [head] in
+    new_head, body
+  
 ;;
 
 let step t =
-  let head, tail = move_forward t.head t.tail t.direction in
+  let head, tail = move_forward_and_grow t in
   t.head <- head;
   t.tail <- tail;
   not (collides_with_self t)

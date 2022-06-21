@@ -1,7 +1,10 @@
 open! Core
 
 module Color : sig
-  type t = Red [@@deriving sexp_of, enumerate, compare]
+  type t = 
+  | Red 
+  | Gold 
+[@@deriving sexp_of, enumerate, compare]
 end
 
 type t [@@deriving sexp_of]
@@ -12,6 +15,8 @@ type t [@@deriving sexp_of]
 
     [create] returns [None] if there are no valid positions for the apple. *)
 val create   : board:Board.t -> snake:Snake.t -> t option
+  
+val create_multiplayer   : board:Board.t -> snakes:Snake.t array -> t option
 
 (** [location] returns the location of the apple on the board. *)
 val location : t -> Position.t

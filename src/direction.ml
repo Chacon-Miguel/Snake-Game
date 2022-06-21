@@ -154,9 +154,17 @@ let next_position t { Position.row; col } : Position.t =
 *)
 let of_key key =
   match key with
-  | _ -> None
+  | 'w' -> Some Up, 0
+  | 'a' -> Some Left, 0
+  | 's' -> Some Down, 0
+  | 'd' -> Some Right, 0
+  | 'i' -> Some Up, 1
+  | 'j' -> Some Left, 1
+  | 'k' -> Some Down, 1
+  | 'l' -> Some Right, 1
+  | _ -> None, 0
 ;;
 
-module Exercises = struct
+(* module Exercises = struct
   let exercise02a = of_key
-end
+end *)
