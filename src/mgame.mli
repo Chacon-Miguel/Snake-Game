@@ -29,6 +29,7 @@ val set_apple      : t -> Apple.t -> unit
 val set_board      : t -> Board.t -> unit
 val set_scores     : t -> int array -> unit 
 
+val get_highest_score : t -> int
 (** [step] is called in a loop, and the game is re-rendered after each call. *)
 val step       : t -> unit
 

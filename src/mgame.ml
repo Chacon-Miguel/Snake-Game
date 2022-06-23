@@ -5,7 +5,7 @@ type t =
   ; mutable game_state : Game_state.t
   ; mutable apple      : Apple.t
   ; mutable scores     : int array
-  ; mutable board              : Board.t
+  ; mutable board      : Board.t
   }
 [@@deriving sexp_of]
 
@@ -56,6 +56,14 @@ let snakes t = t.snakes
 let apple  t = t.apple
 let game_state t = t.game_state
 let scores t = t.scores
+;;
+
+let get_highest_score t = 
+  if t.scores.(0) > t.scores.(1) 
+  then t.scores.(0)
+  else if t.scores.(1) > t.scores.(0)
+  then t.scores.(1)
+  else t.scores.(0)
 ;;
 
 let restart t = 

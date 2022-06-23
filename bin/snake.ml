@@ -2,6 +2,7 @@ open! Core
 open! Snake_lib
 
 let () =
-  Run.run ();
+  Command_unix.run Run.command;
+  
   Core.never_returns (Async.Scheduler.go ())
 ;;
