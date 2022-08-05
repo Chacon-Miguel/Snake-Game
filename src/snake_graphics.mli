@@ -15,3 +15,7 @@ val render : Mgame.t -> unit
 val read_key : unit -> char option
 
 val set_only_one : bool -> unit
+
+val draw_home_screen : unit -> unit 
+
+val initialize_window : unit -> unit

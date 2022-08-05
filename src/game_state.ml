@@ -5,7 +5,7 @@ type t =
   | Game_over of string
   | Win
   | Paused
-[@@deriving sexp_of, compare]
+[@@deriving sexp_of, compare, bin_io]
 
 let to_string t =
   match t with

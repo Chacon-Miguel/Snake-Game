@@ -5,7 +5,7 @@ type t =
   | Up
   | Right
   | Down
-[@@deriving sexp_of]
+[@@deriving sexp_of, bin_io]
 
 let next_position t { Position.row; col } : Position.t =
   match t with

@@ -7,7 +7,7 @@ type t =
   ; mutable scores     : int array
   ; mutable board      : Board.t
   }
-[@@deriving sexp_of]
+[@@deriving sexp_of, bin_io]
 
 let set_snakes t snakes = t.snakes <- snakes
 let set_game_state t game_state = t.game_state <- game_state
@@ -59,6 +59,7 @@ let scores t = t.scores
 ;;
 
 let get_highest_score t = 
+  print_endline (to_string t);
   if t.scores.(0) > t.scores.(1) 
   then t.scores.(0)
   else if t.scores.(1) > t.scores.(0)

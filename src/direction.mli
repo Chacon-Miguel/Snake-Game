@@ -5,7 +5,7 @@ type t =
   | Up
   | Right
   | Down
-[@@deriving sexp_of]
+[@@deriving sexp_of, bin_io]
 
 (** [next_position] takes a direction and a starting position and returns the
     next position after taking one step in the specified direction. *)

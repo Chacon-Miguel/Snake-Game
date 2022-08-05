@@ -32,8 +32,6 @@ let set_only_one x = only_one := x
 
 let init_exn () =
   let open Constants in
-  (* Should raise if called twice *)
-  (* if !only_one then failwith "Can only call init_exn once" else only_one := true; *)
   Graphics.open_graph
     (Printf.sprintf " %dx%d" (play_area_height + header_height) play_area_width);
   let height = play_area_height / block_size in
@@ -41,6 +39,37 @@ let init_exn () =
   Mgame.create ~height ~width ~initial_snake_length:3
 ;;
 
+let initialize_window () = 
+  let open Constants in
+  Graphics.open_graph
+    (Printf.sprintf " %dx%d" (play_area_height + header_height) play_area_width);
+;;
+
+(* home screen functions *)
+let draw_title () = 
+  let open Constants in 
+  Graphics.set_font "-*-fixed-medium-r-semicondensed--40-*-*-*-*-*-iso8859-1";
+  let theight, twidth = Graphics.text_size "Snake" in 
+  (* let height, width = Graphics.size_x (), Graphics.size_y () in  *)
+  (* print_endline (sprintf "%d" height);
+  print_endline (sprintf "%d" width); *)
+  Graphics.moveto (play_area_width/2 - twidth) (play_area_height/2 - theight);
+  Graphics.draw_string ("Snake");
+;;
+
+let draw_home_screen () = 
+  Graphics.display_mode false;
+  let open Constants in
+  Graphics.open_graph
+    (Printf.sprintf " %dx%d" (play_area_height + header_height) play_area_width);
+
+  draw_title ();
+
+  Graphics.display_mode true;
+  Graphics.synchronize  ()
+;;
+
+(* Game Board Functions *)
 let draw_block { Position.row; col } ~color =
   let open Constants in
   let col = col * block_size in
@@ -97,6 +126,7 @@ let render game =
   draw_apple apple;
   draw_snake (Snake.head snakes.(0)) (Snake.tail snakes.(0));
   draw_snake (Snake.head snakes.(1)) (Snake.tail snakes.(1));
+
   Graphics.display_mode true;
   Graphics.synchronize  ()
 ;;
